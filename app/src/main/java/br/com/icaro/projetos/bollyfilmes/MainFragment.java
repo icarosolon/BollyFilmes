@@ -40,7 +40,7 @@ import java.util.List;
 
 import br.com.icaro.projetos.bollyfilmes.data.FilmesContract;
 import br.com.icaro.projetos.bollyfilmes.data.FilmesDBHelper;
-import br.com.icaro.projetos.bollyfilmes.service.FilmesIntentService;
+import br.com.icaro.projetos.bollyfilmes.sync.FilmesSyncAdapter;
 
 
 public class MainFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
@@ -132,12 +132,7 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
         switch (item.getItemId()) {
             case R.id.menu_atualizar:
 
-                Intent intentAlarm = new Intent(getContext(), FilmesIntentService.FilmesReceiver.class);
-                PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), 0, intentAlarm, PendingIntent.FLAG_ONE_SHOT);
-
-                AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
-                alarmManager.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
-
+                FilmesSyncAdapter.syncImmediately(getContext());
 
 
                 Toast.makeText(getContext(), "Atualizando os filmes...", Toast.LENGTH_LONG).show();

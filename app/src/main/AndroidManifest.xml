@@ -49,7 +49,6 @@
             android:syncable="true"
             />
 
-        <service android:name=".service.FilmesIntentService"/>
 
         <service android:name=".sync.FilmesAuthenticatorService">
             <intent-filter>
@@ -59,7 +58,6 @@
 
         </service>
 
-        <service android:name=".service.FilmesIntentService"/>
 
         <service android:name=".sync.FilmesSyncService" android:exported="true">
             <intent-filter>
@@ -68,9 +66,9 @@
             </intent-filter>
 
         </service>
-        
-        
-        
+
+
+
         <receiver android:name=".service.FilmesIntentService$FilmesReceiver" android:enabled="true"/>
 
     </application>
