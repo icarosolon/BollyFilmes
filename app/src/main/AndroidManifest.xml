@@ -45,7 +45,9 @@
         <provider
             android:authorities="@string/content_authority"
             android:name=".data.FilmesProvider"
-            android:exported="false"/>
+            android:exported="false"
+            android:syncable="true"
+            />
 
         <service android:name=".service.FilmesIntentService"/>
 
@@ -59,7 +61,7 @@
 
         <service android:name=".service.FilmesIntentService"/>
 
-        <service android:name=".sync.FilmesSyncService">
+        <service android:name=".sync.FilmesSyncService" android:exported="true">
             <intent-filter>
                 <action android:name="android.content.SyncAdapter"/>
                 <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/syncadapter"/>
