@@ -44,6 +44,10 @@
             android:name=".data.FilmesProvider"
             android:exported="false"/>
         
+        <service android:name=".service.FilmesIntentService"/>
+
+        <receiver android:name=".service.FilmesIntentService$FilmesReceiver" android:enabled="true"/>
+
     </application>
 
 </manifest>

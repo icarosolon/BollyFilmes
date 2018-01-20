@@ -1,8 +1,11 @@
 package br.com.icaro.projetos.bollyfilmes;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -37,6 +40,7 @@ import java.util.List;
 
 import br.com.icaro.projetos.bollyfilmes.data.FilmesContract;
 import br.com.icaro.projetos.bollyfilmes.data.FilmesDBHelper;
+import br.com.icaro.projetos.bollyfilmes.service.FilmesIntentService;
 
 
 public class MainFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
@@ -95,8 +99,6 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
 
         getLoaderManager().initLoader(FILMES_LOADER, null, this);
 
-        new FilmesAsyncTask().execute();
-
         return view;
     }
 
@@ -129,7 +131,15 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
 
         switch (item.getItemId()) {
             case R.id.menu_atualizar:
-                new FilmesAsyncTask().execute();
+
+                Intent intentAlarm = new Intent(getContext(), FilmesIntentService.FilmesReceiver.class);
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), 0, intentAlarm, PendingIntent.FLAG_ONE_SHOT);
+
+                AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
+                alarmManager.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+
+
+
                 Toast.makeText(getContext(), "Atualizando os filmes...", Toast.LENGTH_LONG).show();
                 return true;
             case R.id.menu_config:
@@ -199,95 +209,6 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         adapter.swapCursor(null);
-    }
-
-    public class FilmesAsyncTask extends AsyncTask<Void, Void, List<ItemFilme>> {
-
-        @Override
-        protected List<ItemFilme> doInBackground(Void... params) {
-            // https://api.themoviedb.org/3/movie/popular?api_key=qwer08776&language=pt-BR
-
-            HttpURLConnection urlConnection = null;
-            BufferedReader reader = null;
-
-            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-            String ordem = preferences.getString(getString(R.string.prefs_ordem_key), "popular");
-            String idioma = preferences.getString(getString(R.string.prefs_idioma_key), "pt-BR");
-
-            try {
-                String urlBase = "https://api.themoviedb.org/3/movie/" + ordem + "?";
-                String apiKey = "api_key";
-                String language = "language";
-
-                Uri uriApi = Uri.parse(urlBase).buildUpon()
-                        .appendQueryParameter(apiKey, BuildConfig.TMDB_API_KEY)
-                        .appendQueryParameter(language, idioma)
-                        .build();
-
-                URL url = new URL(uriApi.toString());
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.connect();
-
-                InputStream inputStream = urlConnection.getInputStream();
-                if (inputStream == null) {
-                    return null;
-                }
-
-                reader = new BufferedReader(new InputStreamReader(inputStream));
-
-                String linha;
-                StringBuffer buffer = new StringBuffer();
-                while ((linha = reader.readLine()) != null) {
-                    buffer.append(linha);
-                    buffer.append("\n");
-                }
-
-                return JsonUtil.fromJsonToList(buffer.toString());
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                if (urlConnection != null) {
-                    urlConnection.disconnect();
-                }
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(List<ItemFilme> itemFilmes) {
-
-            if (itemFilmes == null) {
-                return;
-            }
-
-            for (ItemFilme itemFilme : itemFilmes) {
-                ContentValues values = new ContentValues();
-                values.put(FilmesContract.FilmesEntry._ID, itemFilme.getId());
-                values.put(FilmesContract.FilmesEntry.COLUMN_TITULO, itemFilme.getTitulo());
-                values.put(FilmesContract.FilmesEntry.COLUMN_DESCRICAO, itemFilme.getDescricao());
-                values.put(FilmesContract.FilmesEntry.COLUMN_POSTER_PATH, itemFilme.getPosterPath());
-                values.put(FilmesContract.FilmesEntry.COLUMN_CAPA_PATH, itemFilme.getCapaPath());
-                values.put(FilmesContract.FilmesEntry.COLUMN_AVALIACAO, itemFilme.getAvaliacao());
-                values.put(FilmesContract.FilmesEntry.COLUMN_DATA_LANCAMENTO, itemFilme.getDataLancamento());
-                values.put(FilmesContract.FilmesEntry.COLUMN_POPULARIDADE, itemFilme.getPopularidade());
-
-                int update = getContext().getContentResolver().update(FilmesContract.FilmesEntry.buildUriForFilmes(itemFilme.getId()), values, null, null);
-
-                if (update == 0) {
-                    getContext().getContentResolver().insert(FilmesContract.FilmesEntry.CONTENT_URI, values);
-                }
-            }
-        }
     }
 
     public interface Callback {
