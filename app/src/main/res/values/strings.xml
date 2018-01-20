@@ -41,4 +41,12 @@
     <string name="sync_account_type">bollyfilmes.icarosolon.com.br</string>
     <string name="content_authority">br.com.icaro.projetos.bollyfilmes</string>
 
+
+    <!-- Preferências de notificação-->
+    <string name="prefs_notify_filmes_titulo">Notificações</string>
+    <string name="prefs_notify_filmes_key">pref_notify_filmes</string>
+    <string name="prefs_notify_filmes_off">Desabilitado</string>
+    <string name="prefs_notify_filmes_on">Habilitado</string>
+    <string name="prefs_notify_filmes_default">true</string>
+
 </resources>

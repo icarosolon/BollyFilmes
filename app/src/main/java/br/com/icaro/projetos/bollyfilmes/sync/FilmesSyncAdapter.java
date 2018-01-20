@@ -132,8 +132,22 @@ public class FilmesSyncAdapter extends AbstractThreadedSyncAdapter {
         }
     }
 
+
+
+
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void notify(ItemFilme itemFilme){
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        String notifyPrefKey = getContext().getString(R.string.prefs_notify_filmes_key);
+        String notifyDefault = getContext().getString(R.string.prefs_notify_filmes_default);
+        boolean notifyPrefs = sharedPreferences.getBoolean(notifyPrefKey, Boolean.parseBoolean(notifyDefault));
+
+        if (!notifyPrefs){
+            return;
+        }
+
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getContext()).
                 setSmallIcon(R.drawable.ic_launcher).
                 setContentTitle(itemFilme.getTitulo()).
