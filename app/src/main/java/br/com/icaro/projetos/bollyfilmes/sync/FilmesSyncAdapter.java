@@ -2,6 +2,10 @@ package br.com.icaro.projetos.bollyfilmes.sync;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.BroadcastReceiver;
 import android.content.ContentProviderClient;
@@ -16,6 +20,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.RequiresApi;
+import android.support.v4.app.NotificationCompat;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -26,6 +32,7 @@ import java.net.URL;
 import java.util.List;
 
 import br.com.icaro.projetos.bollyfilmes.BuildConfig;
+import br.com.icaro.projetos.bollyfilmes.FilmeDetalheActivity;
 import br.com.icaro.projetos.bollyfilmes.ItemFilme;
 import br.com.icaro.projetos.bollyfilmes.JsonUtil;
 import br.com.icaro.projetos.bollyfilmes.R;
@@ -40,10 +47,13 @@ public class FilmesSyncAdapter extends AbstractThreadedSyncAdapter {
 
     public static final int SYNC_FLEXTIME = SYNC_INTERVAL/3;
 
+    public static final int NOTIFICATION_FILMES_ID = 1001;
+
     public FilmesSyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
         // https://api.themoviedb.org/3/movie/popular?api_key=qwer08776&language=pt-BR
@@ -101,6 +111,8 @@ public class FilmesSyncAdapter extends AbstractThreadedSyncAdapter {
 
                 if (update == 0) {
                     getContext().getContentResolver().insert(FilmesContract.FilmesEntry.CONTENT_URI, values);
+
+                    notify(itemFilme);
                 }
             }
 
@@ -119,6 +131,30 @@ public class FilmesSyncAdapter extends AbstractThreadedSyncAdapter {
             }
         }
     }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void notify(ItemFilme itemFilme){
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getContext()).
+                setSmallIcon(R.drawable.ic_launcher).
+                setContentTitle(itemFilme.getTitulo()).
+                setContentText(itemFilme.getDescricao());
+
+        Intent intent = new Intent(getContext(), FilmeDetalheActivity.class);
+        Uri uri = FilmesContract.FilmesEntry.buildUriForFilmes(itemFilme.getId());
+        intent.setData(uri);
+
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(getContext());
+        stackBuilder.addNextIntent(intent);
+        PendingIntent pendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(pendingIntent);
+
+        NotificationManager notificationManager = (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(NOTIFICATION_FILMES_ID, builder.build());
+
+
+
+    }
+
 
     public static void configurePeriodicSync(Context context, int syncInterval, int flexTime) {
         Account account = getSyncAccount(context);
