@@ -3,6 +3,9 @@
     package="br.com.icaro.projetos.bollyfilmes">
 
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS"/>
+    <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS"/>
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
 
     <application
         android:allowBackup="true"
@@ -40,12 +43,32 @@
         </activity>
 
         <provider
-            android:authorities="br.com.icaro.projetos.bollyfilmes"
+            android:authorities="@string/content_authority"
             android:name=".data.FilmesProvider"
             android:exported="false"/>
-        
+
         <service android:name=".service.FilmesIntentService"/>
 
+        <service android:name=".sync.FilmesAuthenticatorService">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator"/>
+                <meta-data android:name="android.accounts.AccountAuthenticator" android:resource="@xml/authenticator"/>
+            </intent-filter>
+
+        </service>
+
+        <service android:name=".service.FilmesIntentService"/>
+
+        <service android:name=".sync.FilmesSyncService">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter"/>
+                <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/syncadapter"/>
+            </intent-filter>
+
+        </service>
+        
+        
+        
         <receiver android:name=".service.FilmesIntentService$FilmesReceiver" android:enabled="true"/>
 
     </application>
